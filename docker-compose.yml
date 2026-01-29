@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PERSONAPLEX_HOST=personaplex
+      - PERSONAPLEX_PORT=8998
+      - PERSONAPLEX_USE_SSL=false
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - DATABASE_URL=sqlite+aiosqlite:///./restaurant.db
+    volumes:
+      - ./backend:/app
+      - backend-data:/app/data
+    depends_on:
+      - personaplex
+    restart: unless-stopped
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # PersonaPlex Server (placeholder - requires GPU)
+  personaplex:
+    image: nvidia/cuda:12.1-runtime-ubuntu22.04
+    ports:
+      - "8998:8998"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+    volumes:
+      - personaplex-models:/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    # Note: Actual PersonaPlex requires specific setup from NVIDIA repo
+    # This is a placeholder for the architecture
+    command: |
+      echo "PersonaPlex placeholder - see NVIDIA repo for actual setup"
+      sleep infinity
+
+volumes:
+  backend-data:
+  personaplex-models:

@@ -1,0 +1,175 @@
+{
+  "benchmark": "direct",
+  "start_time": "2026-01-30T04:31:48.979377",
+  "personaplex_health": {
+    "status": "healthy",
+    "handshake": "ok"
+  },
+  "system_info": {
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GB10",
+        "driver_version": "580.95.05",
+        "cuda_version": "13.0",
+        "memory_total_mb": 0,
+        "memory_used_mb": 0,
+        "memory_free_mb": 0,
+        "utilization_gpu_percent": 0.0,
+        "utilization_memory_percent": 0.0,
+        "temperature_c": 44,
+        "power_draw_w": 12.56,
+        "power_limit_w": 0.0
+      }
+    ],
+    "initial_state": {
+      "timestamp": "2026-01-30T04:31:48.979205",
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GB10",
+          "driver_version": "580.95.05",
+          "cuda_version": "13.0",
+          "memory_total_mb": 0,
+          "memory_used_mb": 0,
+          "memory_free_mb": 0,
+          "utilization_gpu_percent": 0.0,
+          "utilization_memory_percent": 0.0,
+          "temperature_c": 44,
+          "power_draw_w": 12.56,
+          "power_limit_w": 0.0
+        }
+      ],
+      "system": {
+        "cpu_percent": 0.0,
+        "memory_used_mb": 31617,
+        "memory_total_mb": 122570,
+        "memory_percent": 25.795055886432245
+      }
+    }
+  },
+  "benchmark_results": {
+    "benchmark": {
+      "name": "PersonaPlex Direct Benchmark",
+      "description": "Direct PersonaPlex latency (no backend) over 2 requests",
+      "start_time": "2026-01-30T04:31:48.979357",
+      "end_time": "2026-01-30T04:32:30.028137",
+      "duration_seconds": 41.04878,
+      "config": {
+        "num_iterations": 2,
+        "personaplex_url": "ws://localhost:8998/api/chat",
+        "mode": "direct",
+        "num_samples": 2
+      }
+    },
+    "summary": {
+      "total_requests": 2,
+      "successful_requests": 2,
+      "failed_requests": 0,
+      "success_rate": 100.0
+    },
+    "latency_ms": {
+      "ttft": {
+        "mean": 180.17,
+        "median": 180.17,
+        "p50": 180.17,
+        "p90": 182.12,
+        "p95": 182.37,
+        "p99": 182.56,
+        "min": 177.73,
+        "max": 182.61
+      },
+      "e2e": {
+        "mean": 10265.78,
+        "median": 10265.78,
+        "p90": 10281.31,
+        "p95": 10283.25,
+        "p99": 10284.81
+      },
+      "itl": {
+        "mean": 262.02,
+        "median": 262.02,
+        "p90": 265.19,
+        "p95": 265.59
+      },
+      "turn_taking": {
+        "mean": 180.08,
+        "p90": 182.04
+      }
+    },
+    "throughput": {
+      "total_tokens": 679,
+      "total_prompt_tokens": 600,
+      "total_output_tokens": 79,
+      "tokens_per_second": 1.92,
+      "tokens_per_minute": 115.47,
+      "requests_per_second": 0.0487
+    },
+    "requests": [
+      {
+        "request_id": "direct_0",
+        "prompt": "[audio 40.0s]",
+        "prompt_tokens": 400,
+        "output_tokens": 40,
+        "ttft_ms": 182.61,
+        "e2e_latency_ms": 10246.37,
+        "itl_ms": 258.04,
+        "tps": 3.9,
+        "turn_taking_latency_ms": 182.53,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "direct_1",
+        "prompt": "[audio 20.0s]",
+        "prompt_tokens": 200,
+        "output_tokens": 39,
+        "ttft_ms": 177.73,
+        "e2e_latency_ms": 10285.19,
+        "itl_ms": 265.99,
+        "tps": 3.79,
+        "turn_taking_latency_ms": 177.62,
+        "success": true,
+        "error": null
+      }
+    ]
+  },
+  "system_metrics": {
+    "gpu_count": 1,
+    "sample_count": 77,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GB10",
+        "driver_version": "580.95.05",
+        "cuda_version": "13.0",
+        "memory_total_mb": 0,
+        "utilization": {
+          "mean_percent": 49.3,
+          "max_percent": 95.0
+        },
+        "memory": {
+          "total_mb": 0,
+          "used_mean_mb": 0.0,
+          "used_max_mb": 0.0,
+          "percent_mean": 0.0
+        },
+        "temperature": {
+          "mean_c": 48.8,
+          "max_c": 52
+        },
+        "power": {
+          "draw_mean_w": 21.9,
+          "draw_max_w": 30.2
+        }
+      }
+    ],
+    "system": {
+      "cpu_percent_mean": 0.0,
+      "cpu_percent_max": 0.0,
+      "memory_used_mean_mb": 31635.7,
+      "memory_used_max_mb": 31687
+    }
+  },
+  "end_time": "2026-01-30T04:32:30.349977"
+}

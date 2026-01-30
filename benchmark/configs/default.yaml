@@ -1,0 +1,77 @@
+# PersonaPlex Benchmark Configuration
+# Default settings for performance testing
+
+server:
+  host: localhost
+  port: 8998
+  use_ssl: false
+  ssl_verify: false
+  connect_timeout: 10.0
+  response_timeout: 30.0
+
+# Model configuration
+model:
+  voice_id: NATF1
+  text_prompt: |
+    You are a friendly restaurant receptionist for Tony's Pizzeria.
+    Help customers with reservations, menu questions, and general inquiries.
+    Keep responses concise and helpful.
+
+# Benchmark settings
+benchmark:
+  # Text latency benchmark
+  text:
+    enabled: true
+    iterations: 100
+    warmup_iterations: 5
+
+  # Audio latency benchmark
+  audio:
+    enabled: true
+    iterations: 50
+    sample_rate: 24000
+    utterance_duration_range: [1.0, 3.0]
+
+  # Turn-taking benchmark
+  turn_taking:
+    enabled: true
+    smooth_iterations: 20
+    interrupt_iterations: 10
+    target_smooth_latency_ms: 220
+    target_interrupt_latency_ms: 150
+
+  # Throughput benchmark
+  throughput:
+    enabled: true
+    duration_seconds: 60
+    concurrency: 1
+
+# Test prompts
+prompts:
+  - "Hello, I'd like to make a reservation."
+  - "What time do you open tomorrow?"
+  - "Do you have any vegetarian options on the menu?"
+  - "I need a table for 4 people at 7 PM."
+  - "What's your most popular dish?"
+  - "Can I modify my existing reservation?"
+  - "Do you have outdoor seating available?"
+  - "What are your specials today?"
+  - "Is there parking available nearby?"
+  - "Can you accommodate food allergies?"
+  - "How much is a large pepperoni pizza?"
+  - "What desserts do you have?"
+  - "Can I order takeout?"
+  - "Do you have gluten-free options?"
+  - "What's the wait time right now?"
+
+# Output settings
+output:
+  format: json
+  directory: reports
+  include_raw_data: true
+  timestamp_files: true
+
+# Logging
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

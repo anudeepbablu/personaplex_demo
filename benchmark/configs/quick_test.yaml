@@ -1,0 +1,36 @@
+# PersonaPlex Quick Test Configuration
+# Fast validation benchmark settings
+
+server:
+  host: localhost
+  port: 8998
+  use_ssl: false
+  connect_timeout: 5.0
+  response_timeout: 15.0
+
+benchmark:
+  text:
+    enabled: true
+    iterations: 10
+    warmup_iterations: 2
+
+  audio:
+    enabled: true
+    iterations: 5
+
+  turn_taking:
+    enabled: true
+    smooth_iterations: 5
+    interrupt_iterations: 3
+
+  throughput:
+    enabled: false  # Skip for quick test
+
+output:
+  format: json
+  directory: reports/quick
+  include_raw_data: false
+  timestamp_files: false
+
+logging:
+  level: INFO

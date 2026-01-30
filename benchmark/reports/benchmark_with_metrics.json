@@ -1,0 +1,366 @@
+{
+  "benchmark_suite": "PersonaPlex Full Benchmark",
+  "start_time": "2026-01-30T03:04:48.684122",
+  "system_info": {
+    "gpus": [],
+    "initial_state": {
+      "timestamp": "2026-01-30T03:04:48.683996",
+      "gpus": [],
+      "system": {
+        "cpu_percent": 0.0,
+        "memory_used_mb": 31452,
+        "memory_total_mb": 122570,
+        "memory_percent": 25.660438932854696
+      }
+    }
+  },
+  "text_benchmark": {
+    "benchmark": {
+      "name": "PersonaPlex Text Latency Benchmark",
+      "description": "Text response latency over 10 requests",
+      "start_time": "2026-01-30T03:04:48.755210",
+      "end_time": "2026-01-30T03:04:53.756980",
+      "duration_seconds": 5.00177,
+      "config": {
+        "num_iterations": 10,
+        "num_prompts": 10,
+        "system_prompt_length": 172
+      }
+    },
+    "summary": {
+      "total_requests": 10,
+      "successful_requests": 10,
+      "failed_requests": 0,
+      "success_rate": 100.0
+    },
+    "latency_ms": {
+      "ttft": {
+        "mean": 154.36,
+        "median": 167.81,
+        "p50": 167.81,
+        "p90": 182.57,
+        "p95": 187.98,
+        "p99": 192.3,
+        "min": 105.32,
+        "max": 193.38
+      },
+      "e2e": {
+        "mean": 499.99,
+        "median": 496.25,
+        "p90": 538.21,
+        "p95": 542.32,
+        "p99": 545.61
+      },
+      "itl": {
+        "mean": 23.04,
+        "median": 23.18,
+        "p90": 23.88,
+        "p95": 24.14
+      },
+      "turn_taking": null
+    },
+    "throughput": {
+      "total_tokens": 674,
+      "total_prompt_tokens": 514,
+      "total_output_tokens": 160,
+      "tokens_per_second": 31.99,
+      "tokens_per_minute": 1919.32,
+      "requests_per_second": 1.9993
+    },
+    "requests": [
+      {
+        "request_id": "text_0",
+        "prompt": "Hello, I'd like to make a reservation.",
+        "prompt_tokens": 52,
+        "output_tokens": 16,
+        "ttft_ms": 112.34,
+        "e2e_latency_ms": 466.27,
+        "itl_ms": 23.6,
+        "tps": 34.31,
+        "turn_taking_latency_ms": null,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "text_1",
+        "prompt": "What time do you open tomorrow?",
+        "prompt_tokens": 50,
+        "output_tokens": 16,
+        "ttft_ms": 176.38,
+        "e2e_latency_ms": 509.18,
+        "itl_ms": 22.19,
+        "tps": 31.42,
+        "turn_taking_latency_ms": null,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "text_2",
+        "prompt": "Do you have any vegetarian options on the menu?",
+        "prompt_tokens": 54,
+        "output_tokens": 16,
+        "ttft_ms": 159.25,
+        "e2e_latency_ms": 494.4,
+        "itl_ms": 22.34,
+        "tps": 32.36,
+        "turn_taking_latency_ms": null,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "text_3",
+        "prompt": "I need a table for 4 people at 7 PM.",
+        "prompt_tokens": 52,
+        "output_tokens": 16,
+        "ttft_ms": 105.32,
+        "e2e_latency_ms": 452.82,
+        "itl_ms": 23.17,
+        "tps": 35.33,
+        "turn_taking_latency_ms": null,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "text_4",
+        "prompt": "What's your most popular dish?",
+        "prompt_tokens": 50,
+        "output_tokens": 16,
+        "ttft_ms": 181.37,
+        "e2e_latency_ms": 532.14,
+        "itl_ms": 23.38,
+        "tps": 30.07,
+        "turn_taking_latency_ms": null,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "text_5",
+        "prompt": "Can I modify my existing reservation?",
+        "prompt_tokens": 52,
+        "output_tokens": 16,
+        "ttft_ms": 193.38,
+        "e2e_latency_ms": 537.29,
+        "itl_ms": 22.93,
+        "tps": 29.78,
+        "turn_taking_latency_ms": null,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "text_6",
+        "prompt": "Do you have outdoor seating available?",
+        "prompt_tokens": 52,
+        "output_tokens": 16,
+        "ttft_ms": 111.55,
+        "e2e_latency_ms": 468.83,
+        "itl_ms": 23.82,
+        "tps": 34.13,
+        "turn_taking_latency_ms": null,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "text_7",
+        "prompt": "What are your specials today?",
+        "prompt_tokens": 50,
+        "output_tokens": 16,
+        "ttft_ms": 176.37,
+        "e2e_latency_ms": 497.41,
+        "itl_ms": 21.4,
+        "tps": 32.17,
+        "turn_taking_latency_ms": null,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "text_8",
+        "prompt": "Is there parking available nearby?",
+        "prompt_tokens": 51,
+        "output_tokens": 16,
+        "ttft_ms": 180.36,
+        "e2e_latency_ms": 546.43,
+        "itl_ms": 24.4,
+        "tps": 29.28,
+        "turn_taking_latency_ms": null,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "text_9",
+        "prompt": "Can you accommodate food allergies?",
+        "prompt_tokens": 51,
+        "output_tokens": 16,
+        "ttft_ms": 147.28,
+        "e2e_latency_ms": 495.09,
+        "itl_ms": 23.19,
+        "tps": 32.32,
+        "turn_taking_latency_ms": null,
+        "success": true,
+        "error": null
+      }
+    ]
+  },
+  "audio_benchmark": {
+    "benchmark": {
+      "name": "PersonaPlex Audio Latency Benchmark",
+      "description": "Audio turn-taking latency over 5 requests",
+      "start_time": "2026-01-30T03:04:53.776047",
+      "end_time": "2026-01-30T03:04:57.381816",
+      "duration_seconds": 3.605769,
+      "config": {
+        "num_iterations": 5,
+        "sample_rate": 24000,
+        "use_real_samples": true,
+        "num_real_samples": 2
+      }
+    },
+    "summary": {
+      "total_requests": 5,
+      "successful_requests": 5,
+      "failed_requests": 0,
+      "success_rate": 100.0
+    },
+    "latency_ms": {
+      "ttft": {
+        "mean": 218.45,
+        "median": 218.92,
+        "p50": 218.92,
+        "p90": 246.79,
+        "p95": 255.61,
+        "p99": 262.67,
+        "min": 184.26,
+        "max": 264.43
+      },
+      "e2e": {
+        "mean": 721.0,
+        "median": 721.31,
+        "p90": 748.98,
+        "p95": 757.85,
+        "p99": 764.93
+      },
+      "itl": {
+        "mean": 55.84,
+        "median": 55.82,
+        "p90": 55.91,
+        "p95": 55.93
+      },
+      "turn_taking": {
+        "mean": 218.45,
+        "p90": 246.79
+      }
+    },
+    "throughput": {
+      "total_tokens": 375,
+      "total_prompt_tokens": 325,
+      "total_output_tokens": 50,
+      "tokens_per_second": 13.87,
+      "tokens_per_minute": 832.0,
+      "requests_per_second": 1.3867
+    },
+    "requests": [
+      {
+        "request_id": "audio_0",
+        "prompt": "[audio input]",
+        "prompt_tokens": 65,
+        "output_tokens": 10,
+        "ttft_ms": 218.92,
+        "e2e_latency_ms": 721.31,
+        "itl_ms": 55.82,
+        "tps": 13.86,
+        "turn_taking_latency_ms": 218.92,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "audio_1",
+        "prompt": "[audio input]",
+        "prompt_tokens": 65,
+        "output_tokens": 10,
+        "ttft_ms": 204.31,
+        "e2e_latency_ms": 707.97,
+        "itl_ms": 55.96,
+        "tps": 14.12,
+        "turn_taking_latency_ms": 204.3,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "audio_2",
+        "prompt": "[audio input]",
+        "prompt_tokens": 65,
+        "output_tokens": 10,
+        "ttft_ms": 220.33,
+        "e2e_latency_ms": 722.4,
+        "itl_ms": 55.78,
+        "tps": 13.84,
+        "turn_taking_latency_ms": 220.33,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "audio_3",
+        "prompt": "[audio input]",
+        "prompt_tokens": 65,
+        "output_tokens": 10,
+        "ttft_ms": 184.26,
+        "e2e_latency_ms": 686.61,
+        "itl_ms": 55.82,
+        "tps": 14.56,
+        "turn_taking_latency_ms": 184.26,
+        "success": true,
+        "error": null
+      },
+      {
+        "request_id": "audio_4",
+        "prompt": "[audio input]",
+        "prompt_tokens": 65,
+        "output_tokens": 10,
+        "ttft_ms": 264.43,
+        "e2e_latency_ms": 766.71,
+        "itl_ms": 55.81,
+        "tps": 13.04,
+        "turn_taking_latency_ms": 264.42,
+        "success": true,
+        "error": null
+      }
+    ]
+  },
+  "turn_taking_benchmark": {
+    "benchmark": "turn_taking",
+    "config": {
+      "smooth_iterations": 5,
+      "interrupt_iterations": 2,
+      "target_smooth_ms": 220,
+      "target_interrupt_ms": 150
+    },
+    "metrics": {
+      "smooth_turn_taking": {
+        "mean_ms": 221.9761848449707,
+        "median_ms": 213.10663223266602,
+        "min_ms": 179.52823638916016,
+        "max_ms": 266.5064334869385,
+        "p90_ms": 260.87584495544434,
+        "count": 5
+      },
+      "interruption_handling": {
+        "mean_ms": 100.53443908691406,
+        "median_ms": 100.53443908691406,
+        "p90_ms": 100.69618225097656,
+        "count": 2
+      }
+    },
+    "smooth_turn_taking_pass": true,
+    "interruption_pass": true
+  },
+  "system_metrics": {
+    "gpu_count": 0,
+    "sample_count": 14,
+    "system": {
+      "cpu_percent_mean": 0.0,
+      "cpu_percent_max": 0.0,
+      "memory_used_mean_mb": 31489.4,
+      "memory_used_max_mb": 31513
+    }
+  },
+  "end_time": "2026-01-30T03:05:03.122512"
+}

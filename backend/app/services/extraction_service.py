@@ -53,8 +53,27 @@ class ExtractionService:
         'modify': ['change', 'modify', 'update', 'reschedule', 'move'],
         'cancel': ['cancel', 'cancellation', 'delete', 'remove'],
         'waitlist': ['waitlist', 'wait list', 'waiting list', 'walk-in', 'walk in'],
-        'faq': ['hours', 'parking', 'menu', 'dress code', 'policy', 'allergies', 'gluten', 'vegan'],
+        'faq': ['hours', 'parking', 'dress code', 'policy'],
+        'menu': ['menu', 'food', 'eat', 'order', 'pizza', 'appetizer', 'dessert', 'drink', 'beverage'],
     }
+
+    # Menu-related query patterns
+    MENU_QUERY_KEYWORDS = {
+        'menu_browse': ['menu', 'what do you have', 'what\'s on the menu', 'food options', 'what can i get'],
+        'pizza_query': ['pizza', 'pizzas', 'pie', 'pies'],
+        'appetizer_query': ['appetizer', 'appetizers', 'starter', 'starters', 'side', 'sides'],
+        'dessert_query': ['dessert', 'desserts', 'sweet', 'sweets'],
+        'beverage_query': ['drink', 'drinks', 'beverage', 'beverages', 'soda', 'beer', 'wine'],
+        'price_query': ['how much', 'price', 'cost', 'prices', 'costs'],
+        'dietary_query': ['vegetarian', 'vegan', 'gluten free', 'gluten-free', 'allergy', 'allergies'],
+        'availability_query': ['available', 'do you have', 'can i get', 'is there'],
+    }
+
+    # Pizza names for specific item queries
+    PIZZA_NAMES = [
+        'margherita', 'pepperoni', 'bbq chicken', 'veggie deluxe', 'meat lovers',
+        'hawaiian', 'white truffle'
+    ]
     
     def __init__(self):
         pass
@@ -359,5 +378,75 @@ class ExtractionService:
         for field in priority:
             if field in missing:
                 return prompts[field]
-        
+
         return None
+
+    def detect_menu_query(self, text: str) -> Optional[dict]:
+        """
+        Detect if text contains a menu-related query.
+
+        Returns a dict with query details or None if no menu query detected.
+        """
+        text_lower = text.lower()
+
+        # Check for menu-related keywords
+        query_info = {
+            'is_menu_query': False,
+            'query_type': None,
+            'category': None,
+            'dietary': None,
+            'item_name': None,
+            'wants_price': False,
+        }
+
+        # Check each query type
+        for query_type, keywords in self.MENU_QUERY_KEYWORDS.items():
+            if any(kw in text_lower for kw in keywords):
+                query_info['is_menu_query'] = True
+
+                if query_type == 'menu_browse':
+                    query_info['query_type'] = 'browse'
+                elif query_type == 'pizza_query':
+                    query_info['query_type'] = 'category'
+                    query_info['category'] = 'pizza'
+                elif query_type == 'appetizer_query':
+                    query_info['query_type'] = 'category'
+                    query_info['category'] = 'appetizer'
+                elif query_type == 'dessert_query':
+                    query_info['query_type'] = 'category'
+                    query_info['category'] = 'dessert'
+                elif query_type == 'beverage_query':
+                    query_info['query_type'] = 'category'
+                    query_info['category'] = 'beverage'
+                elif query_type == 'price_query':
+                    query_info['wants_price'] = True
+                elif query_type == 'dietary_query':
+                    query_info['query_type'] = 'dietary'
+                    if 'vegetarian' in text_lower:
+                        query_info['dietary'] = 'vegetarian'
+                    elif 'vegan' in text_lower:
+                        query_info['dietary'] = 'vegan'
+                    elif 'gluten' in text_lower:
+                        query_info['dietary'] = 'gluten_free'
+                elif query_type == 'availability_query':
+                    query_info['query_type'] = 'availability'
+
+        # Check for specific pizza names
+        for pizza_name in self.PIZZA_NAMES:
+            if pizza_name in text_lower:
+                query_info['is_menu_query'] = True
+                query_info['query_type'] = 'specific_item'
+                query_info['item_name'] = pizza_name.title()
+                break
+
+        # Check for size mentions
+        if any(size in text_lower for size in ['small', 'medium', 'large']):
+            query_info['size'] = None
+            if 'small' in text_lower:
+                query_info['size'] = 'Small'
+            elif 'medium' in text_lower:
+                query_info['size'] = 'Medium'
+            elif 'large' in text_lower:
+                query_info['size'] = 'Large'
+
+        return query_info if query_info['is_menu_query'] else None

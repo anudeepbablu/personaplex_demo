@@ -30,6 +30,15 @@ class TableArea(str, enum.Enum):
     PRIVATE = "private"
 
 
+class MenuCategory(str, enum.Enum):
+    """Menu item categories."""
+    PIZZA = "pizza"
+    APPETIZER = "appetizer"
+    SALAD = "salad"
+    DESSERT = "dessert"
+    BEVERAGE = "beverage"
+
+
 class Restaurant(Base):
     """Restaurant information."""
     __tablename__ = "restaurants"
@@ -48,6 +57,7 @@ class Restaurant(Base):
     waitlist_entries: Mapped[list["WaitlistEntry"]] = relationship(back_populates="restaurant")
     policies: Mapped[list["Policy"]] = relationship(back_populates="restaurant")
     faqs: Mapped[list["FAQ"]] = relationship(back_populates="restaurant")
+    menu_items: Mapped[list["MenuItem"]] = relationship(back_populates="restaurant")
 
 
 class Table(Base):
@@ -122,11 +132,34 @@ class Policy(Base):
 class FAQ(Base):
     """Frequently asked questions."""
     __tablename__ = "faq"
-    
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     restaurant_id: Mapped[int] = mapped_column(ForeignKey("restaurants.id"), nullable=False)
     question: Mapped[str] = mapped_column(Text, nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
     tags: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # comma-separated
-    
+
     restaurant: Mapped["Restaurant"] = relationship(back_populates="faqs")
+
+
+class MenuItem(Base):
+    """Menu items for restaurants."""
+    __tablename__ = "menu_items"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    restaurant_id: Mapped[int] = mapped_column(ForeignKey("restaurants.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    category: Mapped[MenuCategory] = mapped_column(SQLEnum(MenuCategory), nullable=False)
+    price: Mapped[float] = mapped_column(nullable=False)
+    size: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # Small, Medium, Large
+    is_available: Mapped[bool] = mapped_column(default=True)
+    is_vegetarian: Mapped[bool] = mapped_column(default=False)
+    is_vegan: Mapped[bool] = mapped_column(default=False)
+    is_gluten_free: Mapped[bool] = mapped_column(default=False)
+    allergens: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # comma-separated
+    prep_time_min: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    restaurant: Mapped["Restaurant"] = relationship(back_populates="menu_items")

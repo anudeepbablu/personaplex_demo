@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, Field
-from app.models import ReservationStatus, WaitlistStatus, TableArea
+from app.models import ReservationStatus, WaitlistStatus, TableArea, MenuCategory
 
 
 # ============== Session Schemas ==============
@@ -188,3 +188,51 @@ class ControlMessage(BaseModel):
     """Control message for session."""
     action: str  # start, stop, mute, unmute, inject_fact
     payload: Optional[dict] = None
+
+
+# ============== Menu Schemas ==============
+
+class MenuItemResponse(BaseModel):
+    """Menu item response."""
+    id: int
+    restaurant_id: int
+    name: str
+    description: str
+    category: MenuCategory
+    price: float
+    size: Optional[str] = None
+    is_available: bool
+    is_vegetarian: bool
+    is_vegan: bool
+    is_gluten_free: bool
+    allergens: Optional[str] = None
+    prep_time_min: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class MenuCategoryInfo(BaseModel):
+    """Category summary info."""
+    category: MenuCategory
+    item_count: int
+    available_count: int
+
+
+class MenuSearchRequest(BaseModel):
+    """Search menu request."""
+    query: Optional[str] = None
+    category: Optional[MenuCategory] = None
+    max_price: Optional[float] = None
+    dietary: Optional[str] = None  # vegetarian, vegan, gluten_free
+    available_only: bool = True
+
+
+class MenuAvailabilityCheck(BaseModel):
+    """Check availability of specific items."""
+    item_ids: List[int]
+
+
+class MenuAvailabilityResponse(BaseModel):
+    """Availability check response."""
+    availability: dict  # {item_id: bool}

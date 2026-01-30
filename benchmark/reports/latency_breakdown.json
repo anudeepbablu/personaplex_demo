@@ -1,0 +1,29 @@
+{
+  "audio_input": {
+    "duration_seconds": 5.0,
+    "input_tokens": 62,
+    "output_tokens": 0,
+    "tokens_per_second_audio": 12.4
+  },
+  "direct_personaplex": {
+    "ttft_ms": 178.2,
+    "e2e_ms": 1063.69
+  },
+  "opus_processing": {
+    "encode_ms": 34.26,
+    "decode_ms": 3.23,
+    "total_ms": 37.49
+  },
+  "network": {
+    "personaplex_rtt_ms": 0.49,
+    "backend_rtt_ms": 0.1
+  },
+  "full_pipeline": {
+    "ttft_ms": 205.3,
+    "e2e_ms": 1091.81
+  },
+  "calculated_overhead": {
+    "backend_processing_ms": -10.39,
+    "total_encoding_ms": 37.49
+  }
+}

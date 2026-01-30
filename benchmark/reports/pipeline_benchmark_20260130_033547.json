@@ -1,0 +1,164 @@
+{
+  "benchmark": "pipeline",
+  "start_time": "2026-01-30T03:34:41.838669",
+  "backend_health": {
+    "status": "healthy",
+    "personaplex_configured": true,
+    "personaplex_running": true,
+    "personaplex_error": null,
+    "twilio_configured": false,
+    "mode": "live"
+  },
+  "system_info": {
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GB10",
+        "driver_version": "580.95.05",
+        "cuda_version": "13.0",
+        "memory_total_mb": 0,
+        "memory_used_mb": 0,
+        "memory_free_mb": 0,
+        "utilization_gpu_percent": 0.0,
+        "utilization_memory_percent": 0.0,
+        "temperature_c": 45,
+        "power_draw_w": 12.74,
+        "power_limit_w": 0.0
+      }
+    ],
+    "initial_state": {
+      "timestamp": "2026-01-30T03:34:41.838433",
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GB10",
+          "driver_version": "580.95.05",
+          "cuda_version": "13.0",
+          "memory_total_mb": 0,
+          "memory_used_mb": 0,
+          "memory_free_mb": 0,
+          "utilization_gpu_percent": 0.0,
+          "utilization_memory_percent": 0.0,
+          "temperature_c": 45,
+          "power_draw_w": 12.74,
+          "power_limit_w": 0.0
+        }
+      ],
+      "system": {
+        "cpu_percent": 0.0,
+        "memory_used_mb": 31462,
+        "memory_total_mb": 122570,
+        "memory_percent": 25.668597536101817
+      }
+    }
+  },
+  "benchmark_results": {
+    "benchmark": {
+      "name": "PersonaPlex Full Pipeline Benchmark",
+      "description": "End-to-end pipeline latency over 1 requests",
+      "start_time": "2026-01-30T03:34:41.838635",
+      "end_time": "2026-01-30T03:35:47.525986",
+      "duration_seconds": 65.687351,
+      "config": {
+        "num_iterations": 1,
+        "backend_url": "http://localhost:8000",
+        "personaplex_connected": true,
+        "mode": "live",
+        "num_samples": 2
+      }
+    },
+    "summary": {
+      "total_requests": 1,
+      "successful_requests": 0,
+      "failed_requests": 1,
+      "success_rate": 0.0
+    },
+    "latency_ms": {
+      "ttft": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "e2e": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+      },
+      "itl": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p90": 0.0,
+        "p95": 0.0
+      },
+      "turn_taking": null
+    },
+    "throughput": {
+      "total_tokens": 0,
+      "total_prompt_tokens": 0,
+      "total_output_tokens": 0,
+      "tokens_per_second": 0.0,
+      "tokens_per_minute": 0.0,
+      "requests_per_second": 0.0
+    },
+    "requests": [
+      {
+        "request_id": "pipeline_0",
+        "prompt": "[audio 40.0s]",
+        "prompt_tokens": 400,
+        "output_tokens": 0,
+        "ttft_ms": 0.0,
+        "e2e_latency_ms": 60638.93,
+        "itl_ms": 0.0,
+        "tps": 0.0,
+        "turn_taking_latency_ms": null,
+        "success": false,
+        "error": null
+      }
+    ]
+  },
+  "system_metrics": {
+    "gpu_count": 1,
+    "sample_count": 125,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA GB10",
+        "driver_version": "580.95.05",
+        "cuda_version": "13.0",
+        "memory_total_mb": 0,
+        "utilization": {
+          "mean_percent": 0.0,
+          "max_percent": 0.0
+        },
+        "memory": {
+          "total_mb": 0,
+          "used_mean_mb": 0.0,
+          "used_max_mb": 0.0,
+          "percent_mean": 0.0
+        },
+        "temperature": {
+          "mean_c": 45.0,
+          "max_c": 45
+        },
+        "power": {
+          "draw_mean_w": 12.6,
+          "draw_max_w": 12.8
+        }
+      }
+    ],
+    "system": {
+      "cpu_percent_mean": 0.0,
+      "cpu_percent_max": 0.0,
+      "memory_used_mean_mb": 31504.6,
+      "memory_used_max_mb": 31567
+    }
+  },
+  "end_time": "2026-01-30T03:35:47.657061"
+}

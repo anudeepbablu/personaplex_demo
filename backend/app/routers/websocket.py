@@ -10,32 +10,167 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
 
-from app.database import get_db
+from app.database import get_db, async_session_maker
 from app.config import get_settings
 from app.session_manager import session_manager, ConversationState
 from app.services.extraction_service import ExtractionService
 from app.services.reservation_service import ReservationService
+from app.services.menu_service import MenuService
 from app.personas import build_system_prompt
+from app.models import MenuCategory
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 router = APIRouter(tags=["websocket"])
 
 
-# Demo restaurant config (same as sessions.py)
-DEMO_RESTAURANT = {
-    "name": "The Riverside Grill",
-    "address": "456 Harbor View Drive, Lakeside CA 92040",
-    "hours": "Tuesday-Sunday 11 AM - 10 PM, Closed Mondays",
-    "phone": "(555) 234-5678",
-    "policies": {
-        "dress_code": "Smart casual. No athletic wear please.",
-        "cancellation": "24 hours notice appreciated.",
-        "pets": "Service animals welcome inside. Dogs allowed on patio.",
-        "parking": "Free parking lot. Valet available Friday-Sunday evenings.",
-        "children": "Family-friendly! Kids menu and high chairs available.",
+# Restaurant configs by ID
+RESTAURANT_CONFIGS = {
+    1: {
+        "name": "The Riverside Grill",
+        "address": "456 Harbor View Drive, Lakeside CA 92040",
+        "hours": "Tuesday-Sunday 11 AM - 10 PM, Closed Mondays",
+        "phone": "(555) 234-5678",
+        "policies": {
+            "dress_code": "Smart casual. No athletic wear please.",
+            "cancellation": "24 hours notice appreciated.",
+            "pets": "Service animals welcome inside. Dogs allowed on patio.",
+            "parking": "Free parking lot. Valet available Friday-Sunday evenings.",
+            "children": "Family-friendly! Kids menu and high chairs available.",
+        }
+    },
+    2: {
+        "name": "Tony's Pizzeria",
+        "address": "789 Main Street, Downtown CA 92101",
+        "hours": "Daily 11 AM - 11 PM, Late night Fri-Sat until midnight",
+        "phone": "(555) 789-0123",
+        "policies": {
+            "dress_code": "Super casual - come as you are!",
+            "cancellation": "Just give us a call if you can't make it.",
+            "pets": "Dogs welcome on the patio!",
+            "parking": "Street parking and lot behind the building.",
+            "children": "Very family-friendly! Kids eat free on Tuesdays.",
+            "delivery": "Free delivery within 3 miles. 30-45 minute estimate.",
+        }
     }
 }
+
+# Default to restaurant 1 for backwards compatibility
+DEMO_RESTAURANT = RESTAURANT_CONFIGS[1]
+
+
+async def handle_menu_query(
+    session_id: str,
+    query_info: dict,
+    websocket: WebSocket,
+    restaurant_id: int = 2
+) -> list:
+    """
+    Handle menu queries by querying the database and injecting facts.
+
+    Args:
+        session_id: The session ID
+        query_info: Query details from extraction service
+        websocket: Client WebSocket to send updates
+        restaurant_id: Restaurant ID (default 2 for Tony's Pizzeria)
+
+    Returns:
+        List of facts that were injected
+    """
+    async with async_session_maker() as db:
+        menu_service = MenuService(db)
+
+        # Determine what to query based on query_info
+        category = None
+        dietary = None
+        items = []
+
+        if query_info.get('category'):
+            category_map = {
+                'pizza': MenuCategory.PIZZA,
+                'appetizer': MenuCategory.APPETIZER,
+                'salad': MenuCategory.SALAD,
+                'dessert': MenuCategory.DESSERT,
+                'beverage': MenuCategory.BEVERAGE,
+            }
+            category = category_map.get(query_info['category'])
+
+        if query_info.get('dietary'):
+            dietary = query_info['dietary']
+
+        if query_info.get('query_type') == 'specific_item' and query_info.get('item_name'):
+            # Search for specific item
+            items = await menu_service.get_items_by_name(
+                restaurant_id=restaurant_id,
+                name=query_info['item_name'],
+                available_only=True
+            )
+        elif category:
+            # Get items by category
+            items = await menu_service.get_menu_items(
+                restaurant_id=restaurant_id,
+                category=category,
+                available_only=True,
+                dietary=dietary
+            )
+        elif dietary:
+            # Get items by dietary restriction
+            items = await menu_service.get_menu_items(
+                restaurant_id=restaurant_id,
+                available_only=True,
+                dietary=dietary
+            )
+        elif query_info.get('query_type') == 'browse':
+            # Get category summary
+            categories = await menu_service.get_categories(restaurant_id)
+            summary = menu_service.format_category_summary(categories)
+            facts = [summary]
+
+            # Also get a few popular items
+            pizzas = await menu_service.get_menu_items(
+                restaurant_id=restaurant_id,
+                category=MenuCategory.PIZZA,
+                available_only=True
+            )
+            if pizzas:
+                pizza_facts = menu_service.format_items_as_facts(pizzas[:6], max_items=6)
+                facts.extend(pizza_facts)
+
+            # Inject facts into session
+            session = await session_manager.get_session(session_id)
+            if session:
+                for fact in facts:
+                    session.add_fact(fact)
+
+                await websocket.send_json({
+                    "type": "menu_facts",
+                    "facts": facts,
+                    "query_type": "browse"
+                })
+
+            return facts
+
+        # Format items as facts
+        if items:
+            facts = menu_service.format_items_as_facts(items, max_items=10)
+
+            # Inject facts into session
+            session = await session_manager.get_session(session_id)
+            if session:
+                for fact in facts:
+                    session.add_fact(fact)
+
+                await websocket.send_json({
+                    "type": "menu_facts",
+                    "facts": facts,
+                    "query_type": query_info.get('query_type'),
+                    "category": query_info.get('category'),
+                    "item_name": query_info.get('item_name')
+                })
+
+            return facts
+
+        return []
 
 
 class PersonaPlexBridge:
@@ -51,34 +186,65 @@ class PersonaPlexBridge:
         self.opus_writer = None
         self.opus_reader = None
     
-    async def connect_to_personaplex(self) -> bool:
-        """Establish connection to PersonaPlex server."""
+    async def connect_to_personaplex(self, session) -> bool:
+        """Establish connection to PersonaPlex server with config in URL."""
         try:
             import websockets
             import sphn
-            
+            from urllib.parse import urlencode
+
             # Initialize Opus encoder/decoder for audio conversion
             # Moshi expects 24kHz mono Opus audio
             self.opus_writer = sphn.OpusStreamWriter(24000)
             self.opus_reader = sphn.OpusStreamReader(24000)
-            
+
+            # Build system prompt for URL query params
+            restaurant_config = session.restaurant_config
+            if not restaurant_config:
+                restaurant_config = RESTAURANT_CONFIGS.get(session.restaurant_id, RESTAURANT_CONFIGS[2])
+
+            system_prompt = build_system_prompt(
+                session.persona_type,
+                restaurant_config,
+                session.facts
+            )
+
+            # Build URL with query parameters (PersonaPlex expects config in URL)
+            query_params = {
+                'text_prompt': system_prompt,
+            }
+            ws_url = f"{settings.personaplex_ws_url}?{urlencode(query_params)}"
+
             # Create SSL context for self-signed certs (demo only)
             ssl_context = None
             if settings.personaplex_use_ssl:
                 ssl_context = ssl.create_default_context()
                 ssl_context.check_hostname = False
                 ssl_context.verify_mode = ssl.CERT_NONE
-            
+
+            logger.info(f"Connecting to PersonaPlex at {settings.personaplex_ws_url}")
             self.personaplex_ws = await websockets.connect(
-                settings.personaplex_ws_url,
+                ws_url,
                 ssl=ssl_context,
                 ping_interval=20,
                 ping_timeout=30
             )
+
+            # Wait for handshake byte from PersonaPlex
+            logger.info("Waiting for PersonaPlex handshake...")
+            try:
+                handshake = await asyncio.wait_for(self.personaplex_ws.recv(), timeout=30.0)
+                if isinstance(handshake, bytes) and len(handshake) == 1 and handshake[0] == 0:
+                    logger.info("PersonaPlex handshake received - ready for audio")
+                else:
+                    logger.warning(f"Unexpected handshake: {handshake}")
+            except asyncio.TimeoutError:
+                logger.warning("Handshake timeout - proceeding anyway")
+
             self.is_connected = True
-            logger.info(f"Connected to PersonaPlex at {settings.personaplex_ws_url}")
+            logger.info(f"Connected to PersonaPlex successfully")
             return True
-            
+
         except ImportError as e:
             logger.error(f"sphn library not available for Opus encoding: {e}")
             self.is_connected = False
@@ -88,30 +254,11 @@ class PersonaPlexBridge:
             # Continue in simulation mode
             self.is_connected = False
             return False
-    
+
     async def send_config(self, session):
-        """Send initial configuration to PersonaPlex."""
-        if not self.personaplex_ws:
-            return
-        
-        # Build system prompt
-        system_prompt = build_system_prompt(
-            session.persona_type,
-            DEMO_RESTAURANT,
-            session.facts
-        )
-        
-        # Send text prompt configuration
-        config_message = {
-            "type": "config",
-            "text_prompt": system_prompt,
-            "voice_id": session.voice_id
-        }
-        
-        try:
-            await self.personaplex_ws.send(json.dumps(config_message))
-        except Exception as e:
-            logger.error(f"Error sending config: {e}")
+        """Config is now sent via URL query params in connect_to_personaplex."""
+        # Config is passed via URL query parameters, not as a message
+        pass
     
     async def forward_to_personaplex(self, audio_data: bytes):
         """Forward audio from client to PersonaPlex.
@@ -212,7 +359,16 @@ class PersonaPlexBridge:
                 session.extracted = self.extraction_service.extract_from_text(
                     text, session.extracted
                 )
-                
+
+                # Check for menu queries and inject facts
+                menu_query = self.extraction_service.detect_menu_query(text)
+                if menu_query:
+                    # Get restaurant_id from session (default to 2 for pizza)
+                    restaurant_id = getattr(session, 'restaurant_id', 2)
+                    await handle_menu_query(
+                        self.session_id, menu_query, self.client_ws, restaurant_id
+                    )
+
                 # Determine next state
                 new_state = self.extraction_service.determine_next_state(
                     session.state, session.extracted
@@ -304,22 +460,32 @@ class SimulatedBridge:
         session.extracted = self.extraction_service.extract_from_text(
             user_text, session.extracted
         )
-        
+
+        # Check for menu queries and inject facts
+        menu_query = self.extraction_service.detect_menu_query(user_text)
+        menu_facts = []
+        if menu_query:
+            # Get restaurant_id from session (default to 2 for pizza)
+            restaurant_id = getattr(session, 'restaurant_id', 2)
+            menu_facts = await handle_menu_query(
+                self.session_id, menu_query, self.client_ws, restaurant_id
+            )
+
         # Send extraction update
         await self.client_ws.send_json({
             "type": "extraction",
             "data": session.extracted.to_dict(),
             "missing_fields": session.extracted.get_missing_fields()
         })
-        
+
         # Determine state and generate response
         new_state = self.extraction_service.determine_next_state(
             session.state, session.extracted
         )
         session.state = new_state
-        
-        # Generate contextual response
-        response = self._generate_response(session)
+
+        # Generate contextual response (include menu info if we have it)
+        response = self._generate_response(session, menu_query, menu_facts)
         
         # Simulate agent speaking
         await self.client_ws.send_json({
@@ -354,23 +520,61 @@ class SimulatedBridge:
             "user_speaking": False
         })
     
-    def _generate_response(self, session) -> str:
+    def _generate_response(self, session, menu_query=None, menu_facts=None) -> str:
         """Generate a contextual response based on session state."""
         state = session.state
         extracted = session.extracted
-        
+
+        # Use restaurant config from session (loaded from database)
+        restaurant = session.restaurant_config
+        if not restaurant:
+            restaurant_id = getattr(session, 'restaurant_id', 2)
+            restaurant = RESTAURANT_CONFIGS.get(restaurant_id, RESTAURANT_CONFIGS[2])
+
+        # Handle menu queries first
+        if menu_query and menu_facts:
+            if menu_query.get('query_type') == 'browse':
+                return (
+                    f"At {restaurant['name']}, we have a great selection! "
+                    "Our menu includes delicious pizzas, appetizers, salads, desserts, and beverages. "
+                    "We have options for everyone - including vegetarian and gluten-free choices. "
+                    "What sounds good to you?"
+                )
+            elif menu_query.get('query_type') == 'specific_item':
+                item_name = menu_query.get('item_name', 'that item')
+                if menu_facts:
+                    return f"Great choice! {menu_facts[0]} Would you like to add that to your order?"
+                return f"Let me check on {item_name} for you..."
+            elif menu_query.get('category') == 'pizza':
+                return (
+                    "We have some amazing pizzas! Our most popular ones are the Pepperoni Classic "
+                    "and the BBQ Chicken. All pizzas come in Small, Medium, and Large. "
+                    "Would you like to hear about our specialty options?"
+                )
+            elif menu_query.get('dietary'):
+                dietary = menu_query.get('dietary', '')
+                return (
+                    f"We have great {dietary} options! "
+                    f"{'Our Veggie Deluxe pizza and Garden Salad are popular vegetarian choices.' if dietary == 'vegetarian' else ''}"
+                    f"{'We can make our Veggie Deluxe with vegan cheese!' if dietary == 'vegan' else ''}"
+                    f"{'We offer gluten-free crust for an extra $2.' if dietary == 'gluten_free' else ''} "
+                    "What would you like to try?"
+                )
+            else:
+                return "Here's what we have available. What would you like to order?"
+
         if state == ConversationState.GREETING:
             return (
-                f"Thank you for calling {DEMO_RESTAURANT['name']}! "
-                "How may I help you today? Would you like to make a reservation?"
+                f"Thank you for calling {restaurant['name']}! "
+                "How may I help you today? Would you like to order some pizza or make a reservation?"
             )
-        
+
         if state == ConversationState.COLLECTING_RESERVATION:
             next_q = self.extraction_service.get_next_question(extracted)
             if next_q:
                 return f"Perfect! {next_q}"
             return "Great, let me check that availability for you."
-        
+
         if state == ConversationState.CHECKING_AVAILABILITY:
             if extracted.date_time and extracted.party_size:
                 time_str = extracted.date_time.strftime("%I:%M %p")
@@ -379,7 +583,7 @@ class SimulatedBridge:
                     f"at {time_str}... Yes, we have that available! "
                     "Would you like me to confirm this reservation?"
                 )
-        
+
         if state == ConversationState.CONFIRMING:
             if extracted.guest_name:
                 return (
@@ -387,15 +591,15 @@ class SimulatedBridge:
                     f"{extracted.party_size} at {extracted.date_time.strftime('%I:%M %p') if extracted.date_time else 'your requested time'}. "
                     "You'll receive a confirmation text shortly. Is there anything else I can help with?"
                 )
-        
+
         if state == ConversationState.FAQ_MODE:
             return (
-                "Of course! We're open Tuesday through Sunday, 11 AM to 10 PM. "
-                "We have free parking in our lot, and valet is available on weekends. "
+                f"{restaurant['name']} is open {restaurant['hours']}. "
+                f"{restaurant['policies'].get('parking', 'Parking available.')} "
                 "Is there anything else you'd like to know?"
             )
-        
-        return "I'd be happy to help you with that. Could you tell me a bit more?"
+
+        return "I'd be happy to help you with that. What would you like to know about our menu or make a reservation?"
 
 
 @router.websocket("/ws/sessions/{session_id}/audio")
@@ -415,12 +619,11 @@ async def audio_websocket(
         await websocket.close()
         return
     
-    # Try to connect to PersonaPlex
+    # Try to connect to PersonaPlex (config is passed via URL query params)
     bridge = PersonaPlexBridge(session_id, websocket)
-    connected = await bridge.connect_to_personaplex()
-    
+    connected = await bridge.connect_to_personaplex(session)
+
     if connected:
-        await bridge.send_config(session)
         
         # Start receive task
         receive_task = asyncio.create_task(bridge.receive_from_personaplex())

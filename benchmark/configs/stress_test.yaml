@@ -1,0 +1,44 @@
+# PersonaPlex Stress Test Configuration
+# High-load benchmark settings
+
+server:
+  host: localhost
+  port: 8998
+  use_ssl: false
+  connect_timeout: 30.0
+  response_timeout: 60.0
+
+benchmark:
+  # Extended text benchmark
+  text:
+    enabled: true
+    iterations: 500
+    warmup_iterations: 20
+
+  # Extended audio benchmark
+  audio:
+    enabled: true
+    iterations: 200
+    sample_rate: 24000
+    utterance_duration_range: [0.5, 5.0]
+
+  # Extended turn-taking
+  turn_taking:
+    enabled: true
+    smooth_iterations: 100
+    interrupt_iterations: 50
+
+  # High throughput test
+  throughput:
+    enabled: true
+    duration_seconds: 300  # 5 minutes
+    concurrency: 4
+
+output:
+  format: json
+  directory: reports/stress
+  include_raw_data: true
+  timestamp_files: true
+
+logging:
+  level: DEBUG

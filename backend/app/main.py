@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.database import init_db
-from app.routers import sessions_router, reservations_router, websocket_router
+from app.routers import sessions_router, reservations_router, websocket_router, menu_router
 from app.seed_data import seed_demo_data
 
 # Configure logging
@@ -59,6 +59,7 @@ app.add_middleware(
 app.include_router(sessions_router)
 app.include_router(reservations_router)
 app.include_router(websocket_router)
+app.include_router(menu_router)
 
 
 @app.get("/")

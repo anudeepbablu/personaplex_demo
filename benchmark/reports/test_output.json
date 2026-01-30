@@ -1,0 +1,95 @@
+{
+  "benchmark": {
+    "name": "PersonaPlex Text Latency Benchmark",
+    "description": "Text response latency over 3 requests",
+    "start_time": "2026-01-30T02:48:16.243947",
+    "end_time": "2026-01-30T02:48:17.762974",
+    "duration_seconds": 1.519027,
+    "config": {
+      "num_iterations": 3,
+      "num_prompts": 10,
+      "system_prompt_length": 172
+    }
+  },
+  "summary": {
+    "total_requests": 3,
+    "successful_requests": 3,
+    "failed_requests": 0,
+    "success_rate": 100.0
+  },
+  "latency_ms": {
+    "ttft": {
+      "mean": 179.37,
+      "median": 181.38,
+      "p50": 181.38,
+      "p90": 190.19,
+      "p95": 191.29,
+      "p99": 192.17,
+      "min": 164.33,
+      "max": 192.39
+    },
+    "e2e": {
+      "mean": 506.2,
+      "median": 507.48,
+      "p90": 511.35,
+      "p95": 511.83,
+      "p99": 512.22
+    },
+    "itl": {
+      "mean": 21.79,
+      "median": 22.06,
+      "p90": 22.25,
+      "p95": 22.27
+    },
+    "turn_taking": null
+  },
+  "throughput": {
+    "total_tokens": 204,
+    "total_prompt_tokens": 156,
+    "total_output_tokens": 48,
+    "tokens_per_second": 31.6,
+    "tokens_per_minute": 1895.95,
+    "requests_per_second": 1.9749
+  },
+  "requests": [
+    {
+      "request_id": "text_0",
+      "prompt": "Hello, I'd like to make a reservation.",
+      "prompt_tokens": 52,
+      "output_tokens": 16,
+      "ttft_ms": 192.39,
+      "e2e_latency_ms": 507.48,
+      "itl_ms": 21.01,
+      "tps": 31.53,
+      "turn_taking_latency_ms": null,
+      "success": true,
+      "error": null
+    },
+    {
+      "request_id": "text_1",
+      "prompt": "What time do you open tomorrow?",
+      "prompt_tokens": 50,
+      "output_tokens": 16,
+      "ttft_ms": 181.38,
+      "e2e_latency_ms": 512.32,
+      "itl_ms": 22.06,
+      "tps": 31.23,
+      "turn_taking_latency_ms": null,
+      "success": true,
+      "error": null
+    },
+    {
+      "request_id": "text_2",
+      "prompt": "Do you have any vegetarian options on the menu?",
+      "prompt_tokens": 54,
+      "output_tokens": 16,
+      "ttft_ms": 164.33,
+      "e2e_latency_ms": 498.79,
+      "itl_ms": 22.3,
+      "tps": 32.08,
+      "turn_taking_latency_ms": null,
+      "success": true,
+      "error": null
+    }
+  ]
+}

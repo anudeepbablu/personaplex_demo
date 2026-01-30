@@ -76,18 +76,21 @@ class Session:
     session_id: str
     restaurant_id: int
     created_at: datetime
-    
+
     # Persona and voice settings
     persona_type: str = "family"
     voice_id: str = "NATF1"
     custom_prompt: Optional[str] = None
-    
+
+    # Restaurant config (loaded from database)
+    restaurant_config: Dict[str, Any] = field(default_factory=dict)
+
     # Conversation state
     state: ConversationState = ConversationState.GREETING
     extracted: ExtractedInfo = field(default_factory=ExtractedInfo)
     transcript: list[TranscriptEntry] = field(default_factory=list)
     facts: list[str] = field(default_factory=list)
-    
+
     # Connection state
     is_active: bool = True
     user_speaking: bool = False
@@ -97,6 +100,7 @@ class Session:
         return {
             "session_id": self.session_id,
             "restaurant_id": self.restaurant_id,
+            "restaurant_name": self.restaurant_config.get("name", "Restaurant"),
             "created_at": self.created_at.isoformat(),
             "persona_type": self.persona_type,
             "voice_id": self.voice_id,
@@ -104,6 +108,7 @@ class Session:
             "extracted": self.extracted.to_dict(),
             "transcript": [t.to_dict() for t in self.transcript],
             "facts": self.facts,
+            "facts_count": len(self.facts),
             "missing_fields": self.extracted.get_missing_fields(),
             "is_active": self.is_active,
             "user_speaking": self.user_speaking,

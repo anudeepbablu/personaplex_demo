@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Loader2 } from 'lucide-react';
+import { Building2, Loader2, Activity } from 'lucide-react';
 
 import { CallPanel } from './components/CallPanel';
 import { Transcript } from './components/Transcript';
@@ -51,25 +51,47 @@ function App() {
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
 
-  // Audio stream handlers
+  // Audio stream handlers - accumulate consecutive words from same speaker
   const handleTranscript = useCallback((entry: TranscriptEntry) => {
-    setTranscript(prev => [...prev, entry]);
+    console.log('[App] 💬 Transcript:', entry.speaker, '-', entry.text);
+    setTranscript(prev => {
+      // If there are previous entries and the last one is from the same speaker,
+      // append the text to the last entry instead of creating a new one
+      if (prev.length > 0) {
+        const lastEntry = prev[prev.length - 1];
+        if (lastEntry.speaker === entry.speaker) {
+          // Append to existing entry
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            ...lastEntry,
+            text: lastEntry.text + entry.text,
+            timestamp: entry.timestamp, // Update timestamp to latest
+          };
+          return updated;
+        }
+      }
+      // Different speaker or first entry - add new entry
+      return [...prev, entry];
+    });
   }, []);
 
   const handleExtraction = useCallback((data: ExtractedFieldsType) => {
+    console.log('[App] 📋 Extraction update:', data);
     setExtracted(data);
   }, []);
 
   const handleStateChange = useCallback((state: string) => {
+    console.log('[App] 🔄 State change:', state);
     setConversationState(state);
   }, []);
 
   const handleSpeakingChange = useCallback((speaking: SpeakingState) => {
+    console.log('[App] 🎤 Speaking change - user:', speaking.user_speaking, 'agent:', speaking.agent_speaking);
     setSpeakingState(speaking);
   }, []);
 
   const handleError = useCallback((err: string) => {
-    console.error('Audio stream error:', err);
+    console.error('[App] 🚨 Audio stream error:', err);
   }, []);
 
   // Audio stream hook
@@ -97,12 +119,14 @@ function App() {
     setMissingFields(missing);
   }, [extracted]);
 
-  // Initialize session on mount
+  // Initialize session on mount - only once
   useEffect(() => {
-    if (!session && !isLoading) {
+    console.log('[App] 🚀 Mount effect - session:', session?.session_id, 'isLoading:', isLoading, 'error:', error);
+    if (!session && !isLoading && !error) {
+      console.log('[App] 📞 Creating new session...');
       createSession();
     }
-  }, [session, isLoading, createSession]);
+  }, []); // Empty deps - only run on mount
 
   // Action handlers
   const handleConfirm = async () => {
@@ -178,14 +202,23 @@ function App() {
                 </div>
               </div>
 
-              {session && (
-                <div className="flex items-center gap-4 text-sm">
-                  <span className="text-gray-500">Session:</span>
-                  <code className="font-mono text-accent-gold bg-deep-purple px-3 py-1 rounded">
-                    {session.session_id}
-                  </code>
-                </div>
-              )}
+              <div className="flex items-center gap-4">
+                {session && (
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-gray-500">Session:</span>
+                    <code className="font-mono text-accent-gold bg-deep-purple px-3 py-1 rounded">
+                      {session.session_id}
+                    </code>
+                  </div>
+                )}
+                <a
+                  href="#/dashboard"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-deep-purple hover:bg-royal border border-gray-700/50 transition-colors"
+                >
+                  <Activity className="w-4 h-4 text-green-400" />
+                  <span className="text-sm text-gray-300">Dashboard</span>
+                </a>
+              </div>
             </div>
           </div>
         </header>

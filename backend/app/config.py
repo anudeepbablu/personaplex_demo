@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # PersonaPlex Server
     personaplex_host: str = "localhost"
     personaplex_port: int = 8998
-    personaplex_use_ssl: bool = True
+    personaplex_use_ssl: bool = False  # Set to True if using HTTPS
     
     # API Server
     api_host: str = "0.0.0.0"

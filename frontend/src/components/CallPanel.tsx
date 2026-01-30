@@ -28,9 +28,21 @@ export function CallPanel({
   const handleSubmitText = (e: React.FormEvent) => {
     e.preventDefault();
     if (textInput.trim() && onTextInput) {
+      console.log('[CallPanel] 📝 Sending text input:', textInput.trim());
       onTextInput(textInput.trim());
       setTextInput('');
     }
+  };
+
+  const handleStartCall = () => {
+    console.log('[CallPanel] 🟢 Start Call clicked');
+    console.log('[CallPanel] Current state - isConnected:', isConnected, 'isRecording:', isRecording);
+    onStartCall();
+  };
+
+  const handleEndCall = () => {
+    console.log('[CallPanel] 🔴 End Call clicked');
+    onEndCall();
   };
 
   return (
@@ -124,7 +136,7 @@ export function CallPanel({
               exit={{ scale: 0.8, opacity: 0 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={onStartCall}
+              onClick={handleStartCall}
               className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-accent-gold to-accent-copper rounded-full text-midnight font-semibold shadow-lg hover:shadow-accent-gold/30 transition-shadow"
             >
               <Phone className="w-5 h-5" />
@@ -138,7 +150,7 @@ export function CallPanel({
               exit={{ scale: 0.8, opacity: 0 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={onEndCall}
+              onClick={handleEndCall}
               className="flex items-center gap-3 px-8 py-4 bg-red-600 rounded-full text-white font-semibold shadow-lg hover:shadow-red-500/30 transition-shadow"
             >
               <PhoneOff className="w-5 h-5" />

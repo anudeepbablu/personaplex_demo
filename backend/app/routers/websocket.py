@@ -48,11 +48,19 @@ class PersonaPlexBridge:
         self.extraction_service = ExtractionService()
         self.is_connected = False
         self._tasks = []
+        self.opus_writer = None
+        self.opus_reader = None
     
     async def connect_to_personaplex(self) -> bool:
         """Establish connection to PersonaPlex server."""
         try:
             import websockets
+            import sphn
+            
+            # Initialize Opus encoder/decoder for audio conversion
+            # Moshi expects 24kHz mono Opus audio
+            self.opus_writer = sphn.OpusStreamWriter(24000)
+            self.opus_reader = sphn.OpusStreamReader(24000)
             
             # Create SSL context for self-signed certs (demo only)
             ssl_context = None
@@ -71,6 +79,10 @@ class PersonaPlexBridge:
             logger.info(f"Connected to PersonaPlex at {settings.personaplex_ws_url}")
             return True
             
+        except ImportError as e:
+            logger.error(f"sphn library not available for Opus encoding: {e}")
+            self.is_connected = False
+            return False
         except Exception as e:
             logger.error(f"Failed to connect to PersonaPlex: {e}")
             # Continue in simulation mode
@@ -102,28 +114,78 @@ class PersonaPlexBridge:
             logger.error(f"Error sending config: {e}")
     
     async def forward_to_personaplex(self, audio_data: bytes):
-        """Forward audio from client to PersonaPlex."""
-        if self.personaplex_ws and self.is_connected:
+        """Forward audio from client to PersonaPlex.
+        
+        Client sends raw PCM (16-bit, 24kHz, mono).
+        PersonaPlex expects Opus-encoded audio with \x01 prefix.
+        """
+        if self.personaplex_ws and self.is_connected and self.opus_writer:
             try:
-                await self.personaplex_ws.send(audio_data)
+                import numpy as np
+                
+                # Convert raw PCM bytes to numpy array (16-bit signed int)
+                pcm_array = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
+                
+                # Encode PCM to Opus
+                opus_bytes = self.opus_writer.append_pcm(pcm_array)
+                
+                if len(opus_bytes) > 0:
+                    # Send with \x01 prefix (audio message type for moshi)
+                    await self.personaplex_ws.send(b"\x01" + opus_bytes)
             except Exception as e:
                 logger.error(f"Error forwarding to PersonaPlex: {e}")
     
     async def receive_from_personaplex(self):
-        """Receive and forward messages from PersonaPlex to client."""
+        """Receive and forward messages from PersonaPlex to client.
+        
+        PersonaPlex sends:
+        - \x01 + opus_bytes: Audio response
+        - \x02 + text_bytes: Text token
+        """
         if not self.personaplex_ws:
             return
         
         try:
             async for message in self.personaplex_ws:
-                if isinstance(message, bytes):
-                    # Audio data - forward to client
-                    await self.client_ws.send_bytes(message)
+                if isinstance(message, bytes) and len(message) > 0:
+                    kind = message[0]
+                    payload = message[1:]
+                    
+                    if kind == 1:  # Audio data (Opus encoded)
+                        if self.opus_reader and len(payload) > 0:
+                            # Decode Opus to PCM for client
+                            pcm = self.opus_reader.append_bytes(payload)
+                            if pcm.shape[-1] > 0:
+                                import numpy as np
+                                # Convert float32 PCM to int16 bytes
+                                pcm_int16 = (pcm * 32767).astype(np.int16)
+                                await self.client_ws.send_bytes(pcm_int16.tobytes())
+                    
+                    elif kind == 2:  # Text token
+                        text = payload.decode('utf-8', errors='ignore')
+                        if text.strip():
+                            # Accumulate text and send as transcript
+                            session = await session_manager.get_session(self.session_id)
+                            if session:
+                                session.add_transcript("agent", text)
+                                await self.client_ws.send_json({
+                                    "type": "transcript",
+                                    "speaker": "agent",
+                                    "text": text,
+                                    "timestamp": datetime.utcnow().isoformat()
+                                })
+                                # Update speaking state
+                                await self.client_ws.send_json({
+                                    "type": "speaking",
+                                    "agent_speaking": True,
+                                    "user_speaking": False
+                                })
                 else:
-                    # JSON message (transcript, etc.)
+                    # JSON message (if any)
                     try:
-                        data = json.loads(message)
-                        await self.handle_personaplex_message(data)
+                        if isinstance(message, str):
+                            data = json.loads(message)
+                            await self.handle_personaplex_message(data)
                     except json.JSONDecodeError:
                         pass
                         

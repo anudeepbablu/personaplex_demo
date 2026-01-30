@@ -1,12 +1,47 @@
 """SMS notification service (with Twilio or simulated)."""
 import logging
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
+from dataclasses import dataclass, field
 from app.config import get_settings
 from app.models import Reservation
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+
+@dataclass
+class SimulatedSMS:
+    """A simulated SMS message for demo purposes."""
+    id: str
+    to: str
+    message: str
+    timestamp: datetime = field(default_factory=datetime.utcnow)
+    status: str = "delivered"
+
+
+# In-memory store for simulated messages
+_simulated_messages: List[SimulatedSMS] = []
+
+
+def get_simulated_messages(limit: int = 50) -> List[dict]:
+    """Get recent simulated SMS messages."""
+    return [
+        {
+            "id": msg.id,
+            "to": msg.to,
+            "message": msg.message,
+            "timestamp": msg.timestamp.isoformat(),
+            "status": msg.status
+        }
+        for msg in reversed(_simulated_messages[-limit:])
+    ]
+
+
+def clear_simulated_messages():
+    """Clear all simulated messages."""
+    global _simulated_messages
+    _simulated_messages = []
 
 
 class SMSService:
@@ -115,13 +150,26 @@ class SMSService:
                     "error": str(e)
                 }
         else:
-            # Simulated SMS
+            # Simulated SMS - store for display
+            msg_id = f"SIM_{int(datetime.utcnow().timestamp() * 1000)}"
+            simulated_msg = SimulatedSMS(
+                id=msg_id,
+                to=formatted_phone,
+                message=message
+            )
+            _simulated_messages.append(simulated_msg)
+            
+            # Keep only last 100 messages
+            if len(_simulated_messages) > 100:
+                _simulated_messages.pop(0)
+            
             logger.info(f"[SIMULATED SMS] To: {formatted_phone}\nMessage: {message}")
             return {
                 "success": True,
-                "message_sid": f"SIM_{datetime.utcnow().timestamp()}",
+                "message_sid": msg_id,
                 "error": None,
-                "simulated": True
+                "simulated": True,
+                "message_preview": message[:100] + "..." if len(message) > 100 else message
             }
     
     def _format_phone(self, phone: str) -> str:

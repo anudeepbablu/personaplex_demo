@@ -80,10 +80,30 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
+    import httpx
+    
+    # Actually check if PersonaPlex is reachable
+    personaplex_status = False
+    personaplex_error = None
+    
+    if settings.personaplex_host:
+        try:
+            async with httpx.AsyncClient(timeout=2.0) as client:
+                # Try to connect to PersonaPlex server
+                protocol = "https" if settings.personaplex_use_ssl else "http"
+                url = f"{protocol}://{settings.personaplex_host}:{settings.personaplex_port}"
+                response = await client.get(url, follow_redirects=True)
+                personaplex_status = response.status_code < 500
+        except Exception as e:
+            personaplex_error = str(type(e).__name__)
+    
     return {
         "status": "healthy",
         "personaplex_configured": bool(settings.personaplex_host),
-        "twilio_configured": bool(settings.twilio_account_sid)
+        "personaplex_running": personaplex_status,
+        "personaplex_error": personaplex_error,
+        "twilio_configured": bool(settings.twilio_account_sid),
+        "mode": "live" if personaplex_status else "simulation"
     }
 
 

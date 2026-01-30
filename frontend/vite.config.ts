@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    host: '0.0.0.0',
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
@@ -14,6 +15,22 @@ export default defineConfig({
       '/ws': {
         target: 'ws://localhost:8000',
         ws: true
+      },
+      '/health': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
+      },
+      '/sessions': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
+      },
+      '/docs': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
+      },
+      '/reservations': {
+        target: 'http://localhost:8000',
+        changeOrigin: true
       }
     }
   }

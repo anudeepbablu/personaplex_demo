@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.services.reservation_service import ReservationService, WaitlistService
-from app.services.sms_service import SMSService
+from app.services.sms_service import SMSService, get_simulated_messages, clear_simulated_messages
 from app.models import TableArea
 from app.schemas import (
     AvailabilityCheck, AvailabilityResponse, TimeSlot,
@@ -305,3 +305,21 @@ async def send_sms_notification(
         )
     
     return SMSResponse(**result)
+
+
+@router.get("/notify/sms/simulated")
+async def get_simulated_sms(limit: int = 50):
+    """Get simulated SMS messages (for demo without Twilio)."""
+    messages = get_simulated_messages(limit)
+    return {
+        "simulated": True,
+        "count": len(messages),
+        "messages": messages
+    }
+
+
+@router.delete("/notify/sms/simulated")
+async def clear_simulated_sms():
+    """Clear all simulated SMS messages."""
+    clear_simulated_messages()
+    return {"status": "cleared"}
